@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { fetchOrders } from '../../lib/api.js';
+import { formatDate, formatMoney, shipmentTone } from '../../lib/format.js';
 import OrderDetail from './OrderDetail.jsx';
 
 const FILTERS = [
@@ -10,16 +11,6 @@ const FILTERS = [
   { id: 'failed', label: 'Failed', value: 'failed' },
   { id: 'cancelled', label: 'Cancelled', value: 'cancelled' },
 ];
-
-const TONES = {
-  synced: 'success',
-  pending: 'warning',
-  failed: 'critical',
-  cancelled: 'neutral',
-};
-
-const formatDate = (value) =>
-  value ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 export default function OrdersTable() {
   const [filter, setFilter] = useState(0);
@@ -92,43 +83,81 @@ export default function OrdersTable() {
             <s-table loading={loading || undefined}>
               <s-table-header-row>
                 <s-table-header listSlot="primary">Order</s-table-header>
-                <s-table-header>Shipment</s-table-header>
                 <s-table-header>Tracking</s-table-header>
-                <s-table-header listSlot="inline">Status</s-table-header>
+                <s-table-header>Customer</s-table-header>
+                <s-table-header>Destination</s-table-header>
+                <s-table-header format="numeric">COD</s-table-header>
+                <s-table-header listSlot="inline">Shipment status</s-table-header>
                 <s-table-header>Created</s-table-header>
                 <s-table-header>{''}</s-table-header>
               </s-table-header-row>
 
               <s-table-body>
-                {rows.map((order) => (
-                  <s-table-row key={order.id}>
-                    <s-table-cell>
-                      <s-text fontWeight="bold">{order.shopify_order_number ?? '—'}</s-text>
-                    </s-table-cell>
-                    <s-table-cell>{order.shipment_id ?? '—'}</s-table-cell>
-                    <s-table-cell>
-                      {order.tracking_url ? (
-                        // Opens the public tracking page in a new tab.
-                        // target="_blank" is safe; target="_top" would navigate
-                        // the admin frame away from Shopify.
-                        <s-link href={order.tracking_url} target="_blank">
-                          {order.tracking_number}
-                        </s-link>
-                      ) : (
-                        (order.tracking_number ?? '—')
-                      )}
-                    </s-table-cell>
-                    <s-table-cell>
-                      <s-badge tone={TONES[order.status]}>{order.status}</s-badge>
-                    </s-table-cell>
-                    <s-table-cell>{formatDate(order.created_at)}</s-table-cell>
-                    <s-table-cell>
-                      <s-button variant="tertiary" onClick={() => setOpenOrderId(order.id)}>
-                        View
-                      </s-button>
-                    </s-table-cell>
-                  </s-table-row>
-                ))}
+                {rows.map((order) => {
+                  const shipment = order.shipment;
+
+                  return (
+                    <s-table-row key={order.id}>
+                      <s-table-cell>
+                        <s-stack direction="block" gap="small-500">
+                          <s-text fontWeight="bold">{order.shopify_order_number ?? '—'}</s-text>
+                          <s-text tone="subdued">
+                            {order.shipment_id ? `#${order.shipment_id}` : '—'}
+                          </s-text>
+                        </s-stack>
+                      </s-table-cell>
+
+                      <s-table-cell>
+                        {order.tracking_url && order.tracking_number ? (
+                          // Opens the public tracking page in a new tab.
+                          // target="_blank" is safe; target="_top" would
+                          // navigate the admin frame away from Shopify.
+                          <s-link href={order.tracking_url} target="_blank">
+                            {order.tracking_number}
+                          </s-link>
+                        ) : (
+                          (order.tracking_number ?? '—')
+                        )}
+                      </s-table-cell>
+
+                      <s-table-cell>
+                        <s-stack direction="block" gap="small-500">
+                          <s-text>{shipment?.customer?.name ?? '—'}</s-text>
+                          <s-text tone="subdued">{shipment?.customer?.phone ?? ''}</s-text>
+                        </s-stack>
+                      </s-table-cell>
+
+                      <s-table-cell>
+                        {shipment?.customer?.city ?? '—'}
+                        {shipment?.customer?.governorate ? (
+                          <s-text tone="subdued">{` · ${shipment.customer.governorate}`}</s-text>
+                        ) : null}
+                      </s-table-cell>
+
+                      <s-table-cell>
+                        {shipment?.payment_type === 'COD'
+                          ? formatMoney(shipment?.cod?.amount, shipment?.cod?.currency)
+                          : (shipment?.payment_type ?? '—')}
+                      </s-table-cell>
+
+                      <s-table-cell>
+                        {/* The parcel's real state in Shopini. Falls back to
+                            the sync status while no shipment exists yet. */}
+                        <s-badge tone={shipmentTone(order, shipment)}>
+                          {shipment?.state?.name ?? order.status}
+                        </s-badge>
+                      </s-table-cell>
+
+                      <s-table-cell>{formatDate(order.created_at)}</s-table-cell>
+
+                      <s-table-cell>
+                        <s-button variant="tertiary" onClick={() => setOpenOrderId(order.id)}>
+                          View
+                        </s-button>
+                      </s-table-cell>
+                    </s-table-row>
+                  );
+                })}
               </s-table-body>
             </s-table>
 

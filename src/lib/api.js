@@ -106,6 +106,3 @@ export const fetchOrders = ({ status, page = 1, perPage = 20 } = {}) => {
 };
 
 export const fetchOrder = (id) => get(`/api/shopify/orders/${id}`);
-
-export const fetchSyncLogs = ({ page = 1, perPage = 20 } = {}) =>
-  get(`/api/shopify/sync-logs?${new URLSearchParams({ page, per_page: perPage })}`);
