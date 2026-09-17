@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { fetchOrder } from '../../lib/api.js';
-import { formatDate, formatMoney, shipmentTone } from '../../lib/format.js';
+import { formatDate, formatMoney, shipmentTone, syncTone } from '../../lib/format.js';
 
 function Row({ label, children }) {
   if (children === null || children === undefined || children === '') return null;
@@ -78,10 +78,17 @@ export default function OrderDetail({ orderId, onBack }) {
 
               <s-grid gridTemplateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap="base">
                 <s-stack direction="block" gap="small-500">
-                  <s-text tone="subdued">Status</s-text>
-                  <s-badge tone={shipmentTone(order, shipment)}>
-                    {shipment?.state?.name ?? order.status}
-                  </s-badge>
+                  <s-text tone="subdued">Shopify status</s-text>
+                  <s-badge tone={syncTone(order.status)}>{order.status}</s-badge>
+                </s-stack>
+
+                <s-stack direction="block" gap="small-500">
+                  <s-text tone="subdued">Shipment status</s-text>
+                  {shipment?.state?.name ? (
+                    <s-badge tone={shipmentTone(order, shipment)}>{shipment.state.name}</s-badge>
+                  ) : (
+                    <s-text tone="subdued">Not shipped yet</s-text>
+                  )}
                 </s-stack>
 
                 <Row label="Tracking number">

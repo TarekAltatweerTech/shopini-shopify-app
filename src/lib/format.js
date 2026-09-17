@@ -20,12 +20,28 @@ export function formatMoney(amount, currency) {
 }
 
 /**
- * Badge colour for the row.
+ * Badge colour for the Shopify-side status — whether this order became a
+ * Shopini shipment at all. This is what the filter buttons act on.
+ */
+export function syncTone(status) {
+  switch (status) {
+    case 'synced':
+      return 'success';
+    case 'failed':
+      return 'critical';
+    case 'cancelled':
+      return 'neutral';
+    default: // pending
+      return 'warning';
+  }
+}
+
+/**
+ * Badge colour for the Shopini-side status — where the parcel actually is.
  *
- * Two different things can be wrong, and they need different colours:
- * a sync that failed (no shipment was ever created) and a shipment that hit an
- * exception or came back as a return. A shipment in flight is neutral until
- * Shopini says otherwise.
+ * Two different things can be wrong and they need different colours: a sync
+ * that failed (no shipment was ever created) and a shipment that hit an
+ * exception or came back as a return.
  */
 export function shipmentTone(order, shipment) {
   if (order.status === 'failed') return 'critical';

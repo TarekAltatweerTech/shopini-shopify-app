@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { fetchOrders } from '../../lib/api.js';
-import { formatDate, formatMoney, shipmentTone } from '../../lib/format.js';
+import { formatDate, formatMoney, shipmentTone, syncTone } from '../../lib/format.js';
 import OrderDetail from './OrderDetail.jsx';
 
 const FILTERS = [
@@ -87,6 +87,7 @@ export default function OrdersTable() {
                 <s-table-header>Customer</s-table-header>
                 <s-table-header>Destination</s-table-header>
                 <s-table-header format="numeric">COD</s-table-header>
+                <s-table-header listSlot="inline">Shopify status</s-table-header>
                 <s-table-header listSlot="inline">Shipment status</s-table-header>
                 <s-table-header>Created</s-table-header>
                 <s-table-header>{''}</s-table-header>
@@ -141,11 +142,21 @@ export default function OrdersTable() {
                       </s-table-cell>
 
                       <s-table-cell>
-                        {/* The parcel's real state in Shopini. Falls back to
-                            the sync status while no shipment exists yet. */}
-                        <s-badge tone={shipmentTone(order, shipment)}>
-                          {shipment?.state?.name ?? order.status}
-                        </s-badge>
+                        {/* Whether this Shopify order became a shipment at all.
+                            This is the value the filter buttons above act on. */}
+                        <s-badge tone={syncTone(order.status)}>{order.status}</s-badge>
+                      </s-table-cell>
+
+                      <s-table-cell>
+                        {/* Where the parcel actually is. Stays empty until a
+                            shipment exists — the column above says why. */}
+                        {shipment?.state?.name ? (
+                          <s-badge tone={shipmentTone(order, shipment)}>
+                            {shipment.state.name}
+                          </s-badge>
+                        ) : (
+                          <s-text tone="subdued">—</s-text>
+                        )}
                       </s-table-cell>
 
                       <s-table-cell>{formatDate(order.created_at)}</s-table-cell>
