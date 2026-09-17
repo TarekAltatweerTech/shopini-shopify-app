@@ -1,0 +1,48 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# ------------------------------------------------------------------------------
+# Embedding
+# ------------------------------------------------------------------------------
+# The app is loaded inside an <iframe> in the Shopify admin. Two things decide
+# whether the browser allows that:
+#
+#   - frame-ancestors must name the origins allowed to embed us. The shop's own
+#     *.myshopify.com host and admin.shopify.com are both required: which one
+#     frames the app depends on how the merchant reached it.
+#   - X-Frame-Options must NOT be set. It has no wildcard support, browsers that
+#     honour it ignore frame-ancestors, and the app renders blank.
+#
+# Netlify does not set X-Frame-Options by default. Do not add it.
+# ------------------------------------------------------------------------------
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Hashed assets are immutable; index.html must never be cached or merchants keep
+# running an old bundle against a newer API.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# ------------------------------------------------------------------------------
+# SPA fallback — every path serves index.html.
+# Without this, a reload on any route returns 404, which inside the Shopify
+# admin frame reads as a broken app.
+# ------------------------------------------------------------------------------
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

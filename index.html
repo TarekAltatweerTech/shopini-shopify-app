@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Two Shopify scripts, in this order, before everything else.
+
+      app-bridge.js must be the FIRST script on the page — Shopify's automated
+      review checks for it. It is unversioned on purpose: the URL always serves
+      the current library.
+
+      polaris-1.js provides the <s-*> custom elements. It IS versioned; the "1"
+      tracks the newest stable Polaris v1 release.
+
+      Do not add `integrity` (SRI) to either. Shopify ships updates to these
+      same URLs with no pinned builds, so any hash pins the app to a file that
+      will stop being served. Shopify's own docs load them exactly like this.
+    -->
+    <meta name="shopify-api-key" content="%VITE_SHOPIFY_API_KEY%" />
+    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+    <script src="https://cdn.shopify.com/shopifycloud/polaris-1.js"></script>
+
+    <title>Shopini Express</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

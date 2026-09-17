@@ -1,0 +1,46 @@
+########################################################################
+# Shopini Express — Shopify app configuration
+#
+# Two hosts are involved and mixing them up is the usual cause of a
+# failed review:
+#
+#   application_url  -> this frontend, on Netlify
+#   webhooks uri     -> the Laravel backend
+#
+# Shopify delivers compliance webhooks to the BACKEND. This project is a
+# static site and has no endpoint that could answer them.
+########################################################################
+
+client_id       = "REPLACE_WITH_CLIENT_ID"
+name            = "Shopini Express"
+handle          = "shopini-express"
+application_url = "https://REPLACE.netlify.app"
+embedded        = true
+
+[access_scopes]
+# Only what the integration actually uses. Anything beyond this has to be
+# justified during review, and unused scopes are a rejection risk.
+scopes = "read_orders,write_orders,read_fulfillments,write_fulfillments,read_assigned_fulfillment_orders,write_assigned_fulfillment_orders,read_products"
+
+# Managed Installation. Shopify grants the scopes at install time and the
+# backend obtains its access token by exchanging the App Bridge session
+# token server-to-server, so there is no authorize step and no callback.
+use_legacy_install_flow = false
+
+[auth]
+# Empty by design: with Managed Installation there is no OAuth redirect to
+# allow. Any URL listed here would be a leftover from the old flow.
+redirect_urls = []
+
+[webhooks]
+api_version = "2026-04"
+
+  # The three mandatory compliance topics, all on one backend endpoint.
+  # It answers 401 on a bad HMAC and 200 on a good one, which is what the
+  # automated check tests.
+  [[webhooks.subscriptions]]
+  topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri    = "https://REPLACE-BACKEND-HOST/api/webhooks/compliance"
+
+[build]
+include_config_on_deploy = true
